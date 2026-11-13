@@ -103,52 +103,12 @@ Date:   Tue Jul 27 05:09:09 2021 +0900
     Change-Id: I6859cc171f80d1aa86d9d7187c2f8ceac7b8c4f3
 
 Affects:
-    asm/nasm.c
     output/macho.h
     output/outmacho.c
 
 ------------------------------------------------------------------
-commit bc848980247d61c9fd60ff9560f718ca01d45ea2
-Author: Avi Drissman <avi@chromium.org>
-Date:   Tue Jan 24 14:59:30 2023 -0500
-
-    Update version requirements for the Mac
-
-    Only require major + minor for the Mac pre macOS 11, otherwise only
-    a major version is fine.
-
-    Bug: chromium:1409095
-    Change-Id: Iafe0d19d567bd8dcf846b1d9cdcd6b5e324dbb1a
-
-Affects:
-    output/outmacho.c
-
-------------------------------------------------------------------
-commit d3ce93df395b26af62ec4ad2aa28bd34623f621f
-Merge: 767a169c 888d9ab5
-Author: Dale Curtis <dalecurtis@chromium.org>
-Date:   Mon Apr 7 17:27:08 2025 +0000
-
-    Merge remote-tracking branch 'upstream/master' into merge_clean
-
-    Notes:
-    * There's a new --reproducible flag we can use which lets us delete some
-    custom patches.
-    * The macho-min-version patch still hasn't landed upstream and required
-    some manual merging with the new reproducible flag.
-    * This doesn't build yet, but is a clean merge.
-    * No with a Change-Id
-
-    Bug: 406089864
-
-    Change-Id: I28cac44fe971a90ac373a5ea5ec17e2345fa2208
-
-Affects:
-    asm/nasm.c
-
-------------------------------------------------------------------
-commit 4fcad414b3b7aebe3030c49d0583a19c89464425
-Merge: 45252858 e9fac2fa
+commit 1ee54106566e10dce7f528996eb466a6ba1764d3
+Merge: 452528587 e9fac2faa
 Author: Dale Curtis <dalecurtis@chromium.org>
 Date:   Thu Apr 23 23:16:25 2026 +0000
 
@@ -156,16 +116,83 @@ Date:   Thu Apr 23 23:16:25 2026 +0000
 
     NASM 3.01
 
+    Bug: 495474997
     Change-Id: I8272a7fe83e313e280d4a40013df95e8fede89ac
-
-    # Conflicts:
-    #       .gitignore
-    #       Makefile.in
-    #       asm/nasm.c
-    #       output/outmacho.c
 
 Affects:
     Makefile.in
-    asm/nasm.c
-    output/outmacho.c
+
+------------------------------------------------------------------
+commit 428e3c1f2c8503977227b46238fdbdf3744d0f71
+Author: Adrian Ratiu <adrian.ratiu@collabora.com>
+Date:   Tue May 19 18:26:32 2026 +0000
+
+    nasmlib: move filename_set_extension() into path.c
+
+    Move filename_set_extension() into path.c, so it has access to the
+    filesystem-specific character constants. This prevents something like:
+
+            nasm-code.d/foobar
+
+    ... from getting truncated to ...
+
+            nasm-code.bin
+
+    ... instead of producing ...
+
+            nasm-code.d/foobar.bin
+
+    Make the extension character (normally '.') configurable; this MIGHT
+    be usable on RISCOS at some point, although it is not entirely clear
+    that trying to make sense of RISCOS paths actually is meaningful,
+    because RISCOS compiler chains seem to do all kinds of path
+    translation magic trying to behave like other operating systems... it
+    might simply be more trouble than it is worth, especially for a
+    non-x86 platform.
+
+    As a side bonus, this removes the only use of strrchrnul(), so that
+    function can be dropped.
+
+    Signed-off-by: H. Peter Anvin (Intel) <hpa@zytor.com>
+    (cherry picked from commit ff7a315acbc5713685adf55fe3e09539c4d2fa02)
+
+    Backport notes:
+      Resolved trivial conflicts in
+        autotools/Mkfiles: kept HEAD; dead code in chromium gn build
+        compiler.h: kept HEAD bool block, dropped strrchrnul decl
+        nasm_sources.gni: removed nasmlib/filename.c, stdlib/strrchrnul.c.
+
+    Bug: 491765858
+    Change-Id: Ibb6d31e562961ea7d6960ebac801286b1bafe935
+
+Affects:
+    configure.ac
+    nasmlib/path.c
+
+------------------------------------------------------------------
+commit a49bc5573b0c89ded68273a34479f15cedcb194b
+Author: Justin Cohen <justincohen@google.com>
+Date:   Fri Nov 13 18:57:30 2026 +0000
+
+    Cherry-pick upstream "compiler.h: drop the C++-style cast-to-bool hack"
+
+    Cherry-pick of upstream NASM commit 44e89ba9b650:
+    https://github.com/netwide-assembler/nasm/commit/44e89ba9b650b5e1533bca43682e167f51a3511f
+
+    This removes the bool() constructor-style macro and the "force bool to be
+    a typedef" hack, and makes likely()/unlikely() use !!(x). Under C23,
+    where bool is a keyword, compiler.h no longer defines bool(), so
+    likely()/unlikely() failed with "expected expression".
+
+    The only conflict was the C++/C23 check above the bool block. It already
+    matches upstream 746e7c9efa37 ("compiler.h: the test for 'neither C++
+    nor C23' still wrong"), which landed here as c33b6adfc436. Both upstream
+    commits are in NASM 3.02, so both local patches can be dropped when
+    updating to 3.02.
+
+    Bug: None
+    Change-Id: I1c4a833fc9af66d5f5ae034068e9e6671f1085cd
+
+Affects:
+    include/compiler.h
 

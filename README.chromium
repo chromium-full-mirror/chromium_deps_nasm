@@ -16,6 +16,10 @@ This contains the source to NASM, the assembler used for parts of Chromium.
 
 --[ PATCHES ] ------------------
 * See README.patches for the full listing.
+* Cherry-picks from upstream for building as C23, not yet in README.patches.
+  Both are in NASM 3.02 and can be dropped when updating to it:
+  - 746e7c9efa37 compiler.h: the test for "neither C++ nor C23" still wrong
+  - 44e89ba9b650 compiler.h: drop the stupid C++-style cast-to-bool hack
 
 If you make any changes to nasm which are not in upstream, please update the
 README.patches file with the following command:
